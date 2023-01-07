@@ -43,28 +43,66 @@ contains
       dimensions(2) = lines
    end subroutine get_heightmap_size
 
-   subroutine read_heightmap(filename, heightmap)
+   subroutine find_first(heightmap, symbol, index)
+      character(len=1), allocatable, intent(in) :: heightmap(:, :)
+      character, intent(in) :: symbol
+      integer, intent(out) :: index(2)
+
+      integer :: x, y
+
+      outer: do x = 1, size(heightmap, 1)
+         do y = 1, size(heightmap, 2)
+            if (heightmap(x, y) == symbol) then
+               index(1) = x
+               index(2) = y
+               return
+            end if
+         end do
+      end do outer
+
+      index(1) = 0
+      index(2) = 0
+   end subroutine find_first
+
+   subroutine read_heightmap(filename, heightmap, start, goal)
       implicit none
 
       character(len=*), intent(in) :: filename
-      integer, allocatable, intent(out) :: heightmap(:, :)
+      character(len=1), allocatable, intent(out) :: heightmap(:, :)
+      integer, intent(out) :: start(2)
+      integer, intent(out) :: goal(2)
 
       character(len=1), allocatable :: contents(:)
-      integer :: heightmap_dimensions(2)
+      integer :: index, x = 1, y = 1, heightmap_dimensions(2)
 
       call read_file(filename, contents)
       call get_heightmap_size(contents, heightmap_dimensions)
 
-      allocate (heightmap(heightmap_dimensions(1), heightmap_dimensions(2)))
+      allocate(heightmap(heightmap_dimensions(1), heightmap_dimensions(2)))
+      do index = 1, size(contents)
+         if (contents(index) == NEW_LINE('(A)')) then
+            y = y + 1
+            x = 0
+         else
+            heightmap(x, y) = contents(index)
+            x = x + 1
+         end if
+      end do
+
+      call find_first(heightmap, "S", start)
+      call find_first(heightmap, "E", goal)
    end subroutine read_heightmap
 end module day12
 
 program aoc2022
    use day12
    implicit none
-   integer, allocatable :: heightmap(:, :)
+   character(len=1), allocatable :: heightmap(:, :)
+   integer :: start(2), goal(2)
 
-   call read_heightmap("test_input.txt", heightmap)
+   call read_heightmap("test_input.txt", heightmap, start, goal)
 
    print *, "size:", size(heightmap, 1), size(heightmap, 2)
+   print *, "start: ", start
+   print *, "goal: ", goal
 end program aoc2022
