@@ -2,7 +2,16 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
   "name": "Ubuntu",
-  "build": { "dockerfile": "Dockerfile" }
+"build": {
+	"dockerfile": "Dockerfile"
+},
+"customizations": {
+	"vscode": {
+		"extensions": [
+			"fortran-lang.linter-gfortran"
+		]
+	}
+}
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
