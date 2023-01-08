@@ -2,7 +2,7 @@ module day12
    implicit none
 
    private
-   public t_cell_index, read_heightmap, find_shortest_path
+   public t_cell_index, read_heightmap, find_all_valid_starts, find_shortest_path, find_shortest_path2
 
    type :: t_cell_index
       integer :: x, y
@@ -98,6 +98,25 @@ contains
       heightmap(start%x, start%y) = "a"
       heightmap(goal%x, goal%y) = "z"
    end subroutine read_heightmap
+
+   subroutine find_all_valid_starts(heightmap, starts)
+      character(len=1), intent(in) :: heightmap(:, :)
+      type(t_cell_index), allocatable, intent(out) :: starts(:)
+
+      type(t_cell_index) :: start
+      integer :: x, y
+
+      allocate(starts(0))
+      do x = 1, size(heightmap, 1)
+         do y = 1, size(heightmap, 2)
+            if (heightmap(x, y) == "a") then
+               start%x = x
+               start%y = y
+               starts = [starts, start]
+            end if
+         end do
+      end do
+   end subroutine find_all_valid_starts
 
    function distance(a, b) result(d)
       type(t_cell_index), intent(in) :: a, b
@@ -259,7 +278,27 @@ contains
             end if
          end do
       end do
+
+      length = -1
    end subroutine find_shortest_path
+
+   subroutine find_shortest_path2(heightmap, starts, goal, length)
+      character(len=1), intent(in) :: heightmap(:, :)
+      type(t_cell_index), intent(in) :: starts(:), goal
+      integer, intent(out) :: length
+
+      integer :: index, tmp_length, best_length
+      
+      best_length = -1
+      do index = 1, size(starts)
+         call find_shortest_path(heightmap, starts(index), goal, tmp_length)
+         if (best_length == -1 .or. (tmp_length >= 0 .and. tmp_length < best_length)) then
+            best_length = tmp_length
+         end if
+      end do
+
+      length = best_length
+   end subroutine find_shortest_path2
 end module day12
 
 program aoc2022
@@ -267,9 +306,14 @@ program aoc2022
    implicit none
    character(len=1), allocatable :: heightmap(:, :)
    type(t_cell_index) :: start, goal
+   type(t_cell_index), allocatable :: starts(:)
    integer :: length
 
    call read_heightmap("input.txt", heightmap, start, goal)
    call find_shortest_path(heightmap, start, goal, length)
    print *, "part 1 path length: ", length
+
+   call find_all_valid_starts(heightmap, starts)
+   call find_shortest_path2(heightmap, starts, goal, length)
+   print *, "part 2 path length: ", length
 end program aoc2022
