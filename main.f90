@@ -129,19 +129,6 @@ contains
       d = sqrt(d_x*d_x + d_y*d_y)
    end function distance
 
-   subroutine shift_items(open_set, open_set_size, f_scores, from)
-      type(t_cell_index), intent(inout) :: open_set(:)
-      real, intent(inout) :: f_scores(:)
-      integer, intent(in) :: open_set_size, from
-
-      integer :: index
-
-      do index = open_set_size, from + 1, -1
-         open_set(index) = open_set(index - 1)
-         f_scores(index) = f_scores(index - 1)
-      end do
-   end subroutine shift_items
-
    subroutine sorted_insert(open_set, open_set_size, f_scores, value, value_f_score)
       type(t_cell_index), intent(inout) :: open_set(:)
       integer, intent(inout) :: open_set_size
@@ -156,8 +143,9 @@ contains
       do index = 1, open_set_size
          current = open_set(index)
          if (f_scores(index) < value_f_score) then
+            open_set(index + 1:open_set_size + 1) = open_set(index:open_set_size)
+            f_scores(index + 1:open_set_size + 1) = f_scores(index:open_set_size)
             open_set_size = open_set_size + 1
-            call shift_items(open_set, open_set_size, f_scores, index)
             open_set(index) = value
             f_scores(index) = value_f_score
             return
@@ -288,7 +276,7 @@ contains
       integer, intent(out) :: length
 
       integer :: index, tmp_length, best_length
-      
+
       best_length = -1
       do index = 1, size(starts)
          call find_shortest_path(heightmap, starts(index), goal, tmp_length)
